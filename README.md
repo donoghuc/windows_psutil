@@ -26,3 +26,5 @@ pip install pyinstaller
 pyinstaller hw_5.py
 dist\hw_5\hw_5.exe
 ```
+## portability
+Note that I transfer the "dist" folder to USB stick (54 items, 12MB) to a separate machine running windows 10 (with no python installation) and the program seems to operate just fine! 
