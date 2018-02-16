@@ -1,5 +1,6 @@
 import psutil
 import sys
+import os
 
 def menu():
     '''Give directions on command prompt'''
@@ -46,6 +47,24 @@ def proc_1():
         print("{0:{idx}} | {1:{pid}} | {2:{name}} | {3:{uname}} ".format(i,str(pro['pid']),str(pro['name']),str(pro['username']),idx=max_str['idx'],
                                                             pid=max_str['pid'],name=max_str['name'],uname=max_str['username']))
 
+
+def proc_2():
+    '''List all the running threads within process boundary'''
+    for proc in psutil.process_iter():
+        try:
+            print(proc.threads())
+        except:
+            print("no access")
+
+
+def proc_3():
+    '''Enumerate all the loaded modules within the processes'''
+    p = psutil.Process( os.getpid() )
+    print(p)
+    for dll in p.memory_maps():
+        print(dll.path)
+
+
 def main():
     ''' main logic for HW_5 prog'''
     command = False
@@ -58,8 +77,9 @@ def main():
         if command == '1':
             proc_1()
         if command == '2':
-            pass
-
+            proc_2()
+        if command == '3':
+            proc_3()
 
 if __name__ == '__main__':
     main()
