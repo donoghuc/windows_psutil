@@ -65,6 +65,64 @@ def proc_3():
         print(dll.path)
 
 
+def proc_4():
+    '''Enumerate all the loaded modules within the processes'''
+    # p = psutil.Process( os.getpid() )
+    # from ctypes import *
+    # from ctypes.wintypes import *
+
+    # OpenProcess = windll.kernel32.OpenProcess
+    # ReadProcessMemory = windll.kernel32.ReadProcessMemory
+    # CloseHandle = windll.kernel32.CloseHandle
+
+    # PROCESS_ALL_ACCESS = 0x1F0FFF
+
+    # pid = os.getpid()   # I assume you have this from somewhere.
+    # address = 0x1000000  # Likewise; for illustration I'll get the .exe header.
+
+    # buffer = c_char_p("The data goes here")
+    # bufferSize = len(buffer.value)
+    # bytesRead = c_ulong(0)
+
+    # processHandle = OpenProcess(PROCESS_ALL_ACCESS, False, pid)
+    # if ReadProcessMemory(processHandle, address, buffer, bufferSize, byref(bytesRead)):
+    #     print "Success:", buffer
+    # else:
+    #     print "Failed."
+    
+    # print(list(psutil.win_service_iter()))
+    # print(psutil.win_service_get('python.exe'))
+
+    import ctypes, win32ui, win32process ,win32api, win32con
+    from ctypes import wintypes
+
+    # PROCESS_ALL_ACCESS = (0x000F0000 | 0x00100000 | 0xFFF)
+    # HWND = win32ui.FindWindow(None,"Solitär").GetSafeHwnd()
+    # print(HWND)
+    # PID = win32process.GetWindowThreadProcessId(HWND)[1]
+    rPM = ctypes.WinDLL('kernel32',use_last_error=True).ReadProcessMemory
+    rPM.argtypes = [wintypes.HANDLE,wintypes.LPCVOID,wintypes.LPVOID,ctypes.c_size_t,ctypes.POINTER(ctypes.c_size_t)]
+    rPM.restype = wintypes.BOOL
+    pids = [proc.info['pid'] for proc in psutil.process_iter(attrs=['pid', 'name', 'username'])]
+    for p in pids:
+        try:
+            print(p)
+            PID = int(p)
+            # print(PID)
+            PROCESS = win32api.OpenProcess(win32con.PROCESS_ALL_ACCESS,0,PID)
+            ADDRESS1 = 0x00000000
+            ADDRESS2 = ctypes.create_string_buffer(64)
+            bytes_read = ctypes.c_size_t()
+            print(rPM(PROCESS.handle,ADDRESS1,ADDRESS2,64,ctypes.byref(bytes_read)))
+            print(ctypes.get_last_error())
+            print(ADDRESS2.value)
+        except:
+            print("nope ",p)
+
+# CloseHandle(processHandle)
+    # for dll in p.memory_info():
+    #     print(dll)
+
 def main():
     ''' main logic for HW_5 prog'''
     command = False
@@ -80,6 +138,8 @@ def main():
             proc_2()
         if command == '3':
             proc_3()
+        if command == '4':
+            proc_4()
 
 if __name__ == '__main__':
     main()
