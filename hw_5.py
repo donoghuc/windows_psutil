@@ -114,6 +114,7 @@ def proc_4():
             ADDRESS2 = ctypes.create_string_buffer(64)
             bytes_read = ctypes.c_size_t()
             print(rPM(PROCESS.handle,ADDRESS1,ADDRESS2,64,ctypes.byref(bytes_read)))
+            print(repr(PROCESS))
             print(ctypes.get_last_error())
             print(ADDRESS2.value)
         except:
@@ -122,6 +123,19 @@ def proc_4():
 # CloseHandle(processHandle)
     # for dll in p.memory_info():
     #     print(dll)
+
+def proc_5():
+    import ctypes, win32ui, win32process ,win32api, win32con
+    from ctypes import wintypes
+    p = psutil.Process( os.getpid() )
+    print(p)
+    for dll in p.memory_maps():
+        try:
+            print('{:x}'.format(win32api.GetModuleHandle(dll.path)))
+            print(type(dll.path))
+        except:
+            pass
+        print(dll.path)
 
 def main():
     ''' main logic for HW_5 prog'''
@@ -140,6 +154,8 @@ def main():
             proc_3()
         if command == '4':
             proc_4()
+        if command == '5':
+            proc_5()
 
 if __name__ == '__main__':
     main()
