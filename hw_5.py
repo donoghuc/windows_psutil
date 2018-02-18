@@ -1,5 +1,7 @@
 import psutil
 import win32api
+import ctypes, win32con
+from ctypes import wintypes
 import sys
 import os
 
@@ -71,72 +73,15 @@ def proc_3():
         print("{:6} | {:25}".format("INDEX", "LOADED MODULES PATH"))
         for idx, dll in enumerate(p.memory_maps()):
             print("{:6} | {:25}".format(idx, dll.path))
-            # print(dll.path)
     except:
         print("Invalid PID")
-
-
-def proc_5():
-    '''Enumerate all the loaded modules within the processes'''
-    # p = psutil.Process( os.getpid() )
-    # from ctypes import *
-    # from ctypes.wintypes import *
-
-    # OpenProcess = windll.kernel32.OpenProcess
-    # ReadProcessMemory = windll.kernel32.ReadProcessMemory
-    # CloseHandle = windll.kernel32.CloseHandle
-
-    # PROCESS_ALL_ACCESS = 0x1F0FFF
-
-    # pid = os.getpid()   # I assume you have this from somewhere.
-    # address = 0x1000000  # Likewise; for illustration I'll get the .exe header.
-
-    # buffer = c_char_p("The data goes here")
-    # bufferSize = len(buffer.value)
-    # bytesRead = c_ulong(0)
-
-    # processHandle = OpenProcess(PROCESS_ALL_ACCESS, False, pid)
-    # if ReadProcessMemory(processHandle, address, buffer, bufferSize, byref(bytesRead)):
-    #     print "Success:", buffer
-    # else:
-    #     print "Failed."
-    
-    # print(list(psutil.win_service_iter()))
-    # print(psutil.win_service_get('python.exe'))
-
-    import ctypes, win32ui, win32process ,win32api, win32con
-    from ctypes import wintypes
-
-    # PROCESS_ALL_ACCESS = (0x000F0000 | 0x00100000 | 0xFFF)
-    # HWND = win32ui.FindWindow(None,"Solitär").GetSafeHwnd()
-    # print(HWND)
-    # PID = win32process.GetWindowThreadProcessId(HWND)[1]
-    rPM = ctypes.WinDLL('kernel32',use_last_error=True).ReadProcessMemory
-    rPM.argtypes = [wintypes.HANDLE,wintypes.LPCVOID,wintypes.LPVOID,ctypes.c_size_t,ctypes.POINTER(ctypes.c_size_t)]
-    rPM.restype = wintypes.BOOL
-    pids = [proc.info['pid'] for proc in psutil.process_iter(attrs=['pid', 'name', 'username'])]
-    for p in pids:
-        try:
-            print(p)
-            PID = int(p)
-            # print(PID)
-            PROCESS = win32api.OpenProcess(win32con.PROCESS_ALL_ACCESS,0,PID)
-            ADDRESS1 = 0x00000000
-            ADDRESS2 = ctypes.create_string_buffer(64)
-            bytes_read = ctypes.c_size_t()
-            print(rPM(PROCESS.handle,ADDRESS1,ADDRESS2,64,ctypes.byref(bytes_read)))
-            print(repr(PROCESS))
-            print(ctypes.get_last_error())
-            print(ADDRESS2.value)
-        except:
-            print("nope ",p)
 
 
 def proc_4():
     ''' load page and address info'''
     user_proc = input("Enter ProcessID to see executable pages for. \n>>")
-    p = psutil.Process(int(user_proc))
     try:
+        p = psutil.Process(int(user_proc))
         print("{:13} | {:25} | {:10}".format("BASE ADDRESS", "NAME", "RESIDENT SET SIZE"))
         for dll in p.memory_maps():
             try:
@@ -145,6 +90,63 @@ def proc_4():
                 pass
     except:
         print("Invalid PID")
+
+
+def proc_5():
+    '''Interface to read memory'''
+    user_proc = input("Enter ProcessID inspect memory or pages for. \n>>")
+    try:
+        pid_to_mem = dict()
+        proc = psutil.Process(int(user_proc))
+        print("{:5} | {:13} | {:25}".format("INDEX","BASE ADDRESS", "NAME"))
+        idx = 1
+        for dll in proc.memory_maps():
+            try:
+                print("{:5} | {:13x} | {:25}".format(idx,win32api.GetModuleHandle(dll.path),dll.path.split(os.sep)[-1]))
+                pid_to_mem[idx] = (win32api.GetModuleHandle(dll.path),dll.rss)
+                idx += 1
+            except: 
+                pass
+        proc_to_read = input("Choose index (from INDEX column) for memory page to read \n>>")
+    except:
+        print("invalid PID")
+        return
+
+    rPM = ctypes.WinDLL('kernel32',use_last_error=True).ReadProcessMemory
+    rPM.argtypes = [wintypes.HANDLE,wintypes.LPCVOID,wintypes.LPVOID,ctypes.c_size_t,ctypes.POINTER(ctypes.c_size_t)]
+    rPM.restype = wintypes.BOOL
+
+    pid_to_mem = dict()
+    PID = 8924
+    proc = psutil.Process(PID)
+    print("{:5} | {:13} | {:25}".format("INDEX","BASE ADDRESS", "NAME"))
+    idx = 1
+    for dll in proc.memory_maps():
+        try:
+            print("{:5} | {:13x} | {:25}".format(idx,win32api.GetModuleHandle(dll.path),dll.path.split(os.sep)[-1]))
+            pid_to_mem[idx] = (win32api.GetModuleHandle(dll.path),dll.rss)
+            idx += 1
+        except: 
+            pass
+    PROCESS = win32api.OpenProcess(win32con.PROCESS_ALL_ACCESS,0,PID)
+    i = 0
+    while i < 100:
+        ADDRESS1 = pid_to_mem[3][0] + i
+        ADDRESS2 = ctypes.create_string_buffer(64)
+        bytes_read = ctypes.c_size_t()
+        rPM(PROCESS.handle,ADDRESS1,ADDRESS2,64,ctypes.byref(bytes_read))
+        # print(ctypes.get_last_error())
+        print(ADDRESS2.value)
+        i +=4
+    # ADDRESS1 = pid_to_mem[3][0] + 8
+    # ADDRESS2 = ctypes.create_string_buffer(64)
+    # bytes_read = ctypes.c_size_t()
+    # print(rPM(PROCESS.handle,ADDRESS1,ADDRESS2,64,ctypes.byref(bytes_read)))
+    # print(repr(PROCESS))
+    # print(ctypes.get_last_error())
+    # print(ADDRESS2.value)
+
+
 
 def main():
     ''' main logic for HW_5 prog'''
