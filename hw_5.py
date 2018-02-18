@@ -1,4 +1,5 @@
 import psutil
+import win32api
 import sys
 import os
 
@@ -50,22 +51,32 @@ def proc_1():
 
 def proc_2():
     '''List all the running threads within process boundary'''
-    for proc in psutil.process_iter():
-        try:
-            print(proc.threads())
-        except:
-            print("no access")
+    user_proc = input("Enter ProcessID to see threads for. \n>>")
+    try:
+        proc = psutil.Process(int(user_proc))
+        print(proc)
+        print("{} | {} | {}".format("TRD ID", "USER TIME", "SYSTEM TIME"))
+        for trd in proc.threads():
+            print("{:6} | {:9.3f} | {:9.3f}".format(trd.id, trd.user_time, trd.system_time))
+    except:
+        print("Invalid PID")
 
 
 def proc_3():
     '''Enumerate all the loaded modules within the processes'''
-    p = psutil.Process( os.getpid() )
-    print(p)
-    for dll in p.memory_maps():
-        print(dll.path)
+    user_proc = input("Enter ProcessID to see loaded modules for. \n>>")
+    try:
+        p = psutil.Process(int(user_proc))
+        # print(p)
+        print("{:6} | {:25}".format("INDEX", "LOADED MODULES PATH"))
+        for idx, dll in enumerate(p.memory_maps()):
+            print("{:6} | {:25}".format(idx, dll.path))
+            # print(dll.path)
+    except:
+        print("Invalid PID")
 
 
-def proc_4():
+def proc_5():
     '''Enumerate all the loaded modules within the processes'''
     # p = psutil.Process( os.getpid() )
     # from ctypes import *
@@ -120,22 +131,20 @@ def proc_4():
         except:
             print("nope ",p)
 
-# CloseHandle(processHandle)
-    # for dll in p.memory_info():
-    #     print(dll)
 
-def proc_5():
-    import ctypes, win32ui, win32process ,win32api, win32con
-    from ctypes import wintypes
-    p = psutil.Process( os.getpid() )
-    print(p)
-    for dll in p.memory_maps():
-        try:
-            print('{:x}'.format(win32api.GetModuleHandle(dll.path)))
-            print(type(dll.path))
-        except:
-            pass
-        print(dll.path)
+def proc_4():
+    ''' load page and address info'''
+    user_proc = input("Enter ProcessID to see executable pages for. \n>>")
+    p = psutil.Process(int(user_proc))
+    try:
+        print("{:13} | {:25} | {:10}".format("BASE ADDRESS", "NAME", "RESIDENT SET SIZE"))
+        for dll in p.memory_maps():
+            try:
+                print("{:13x} | {:25} | {:10}".format(win32api.GetModuleHandle(dll.path), dll.path.split(os.sep)[-1], dll.rss))
+            except:
+                pass
+    except:
+        print("Invalid PID")
 
 def main():
     ''' main logic for HW_5 prog'''
