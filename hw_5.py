@@ -56,7 +56,6 @@ def proc_2():
     user_proc = input("Enter ProcessID to see threads for. \n>>")
     try:
         proc = psutil.Process(int(user_proc))
-        print(proc)
         print("{} | {} | {}".format("TRD ID", "USER TIME", "SYSTEM TIME"))
         for trd in proc.threads():
             print("{:6} | {:9.3f} | {:9.3f}".format(trd.id, trd.user_time, trd.system_time))
@@ -115,36 +114,40 @@ def proc_5():
     rPM = ctypes.WinDLL('kernel32',use_last_error=True).ReadProcessMemory
     rPM.argtypes = [wintypes.HANDLE,wintypes.LPCVOID,wintypes.LPVOID,ctypes.c_size_t,ctypes.POINTER(ctypes.c_size_t)]
     rPM.restype = wintypes.BOOL
-
-    pid_to_mem = dict()
-    PID = 8924
-    proc = psutil.Process(PID)
-    print("{:5} | {:13} | {:25}".format("INDEX","BASE ADDRESS", "NAME"))
-    idx = 1
-    for dll in proc.memory_maps():
-        try:
-            print("{:5} | {:13x} | {:25}".format(idx,win32api.GetModuleHandle(dll.path),dll.path.split(os.sep)[-1]))
-            pid_to_mem[idx] = (win32api.GetModuleHandle(dll.path),dll.rss)
-            idx += 1
-        except: 
-            pass
-    PROCESS = win32api.OpenProcess(win32con.PROCESS_ALL_ACCESS,0,PID)
-    i = 0
-    while i < 100:
-        ADDRESS1 = pid_to_mem[3][0] + i
-        ADDRESS2 = ctypes.create_string_buffer(64)
-        bytes_read = ctypes.c_size_t()
-        rPM(PROCESS.handle,ADDRESS1,ADDRESS2,64,ctypes.byref(bytes_read))
-        # print(ctypes.get_last_error())
-        print(ADDRESS2.value)
-        i +=4
-    # ADDRESS1 = pid_to_mem[3][0] + 8
-    # ADDRESS2 = ctypes.create_string_buffer(64)
-    # bytes_read = ctypes.c_size_t()
-    # print(rPM(PROCESS.handle,ADDRESS1,ADDRESS2,64,ctypes.byref(bytes_read)))
-    # print(repr(PROCESS))
-    # print(ctypes.get_last_error())
-    # print(ADDRESS2.value)
+    try:
+        print("Your choice has base addr of: {:x}".format(pid_to_mem[int(proc_to_read)][0]))
+        offset_start = input("choose an offset from base address to start read (integer in decimal notation only plz) \n>>")
+        stop_read = input("max offset + read until is {}, choose end point \n>>".format(pid_to_mem[int(proc_to_read)][1]))
+        if int(stop_read) <= int(offset_start):
+            print("invalid offset and stop chosen")
+            return
+        if int(stop_read) + int(offset_start) > int(pid_to_mem[int(proc_to_read)][1]):
+            print("invalid offset and stop chosen")
+            return
+        print('here')
+    except:
+        print("Invalid choice")
+        return
+    try:
+        PID = int(user_proc)
+        PROCESS = win32api.OpenProcess(win32con.PROCESS_ALL_ACCESS,0,PID)
+        i = int(offset_start)
+        ADDRESS1 = pid_to_mem[int(proc_to_read)][0] + i
+        mem = list()
+        while i < int(stop_read):
+            ADDRESS1 = pid_to_mem[3][0] + i
+            ADDRESS2 = ctypes.create_string_buffer(64)
+            bytes_read = ctypes.c_size_t()
+            rPM(PROCESS.handle,ADDRESS1,ADDRESS2,64,ctypes.byref(bytes_read))
+            if len(ADDRESS2.value) == 0:
+                i+=1
+            else:
+                i += len(ADDRESS2.value)
+                mem.append(ADDRESS2.value)
+        print(mem)
+    except:
+        print("permission error")
+        return
 
 
 
@@ -167,6 +170,7 @@ def main():
             proc_4()
         if command == '5':
             proc_5()
+
 
 if __name__ == '__main__':
     main()
