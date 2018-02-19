@@ -1,3 +1,6 @@
+# VIDEO DEMO
+Quick overview and demo via video!
+[demo video](https://media.oregonstate.edu/media/t/0_2sxnyk8r)
 # Project Req
 - Enumerate all the running processes.
 - List all the running threads within process boundary.
@@ -28,3 +31,4 @@ dist\hw_5\hw_5.exe
 ```
 ## portability
 Note that I transfer the "dist" folder to USB stick (54 items, 12MB) to a separate machine running windows 10 (with no python installation) and the program seems to operate just fine! 
+
