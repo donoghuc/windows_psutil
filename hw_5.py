@@ -92,7 +92,7 @@ def proc_4():
 
 
 def proc_5():
-    '''Interface to read memory'''
+    '''Interface to read memory, select PID, then page to read, then offset and mem to read'''
     user_proc = input("Enter ProcessID inspect memory or pages for. \n>>")
     try:
         pid_to_mem = dict()
@@ -135,7 +135,7 @@ def proc_5():
         ADDRESS1 = pid_to_mem[int(proc_to_read)][0] + i
         mem = list()
         while i < int(stop_read):
-            ADDRESS1 = pid_to_mem[3][0] + i
+            ADDRESS1 = pid_to_mem[int(proc_to_read)][0] + i
             ADDRESS2 = ctypes.create_string_buffer(64)
             bytes_read = ctypes.c_size_t()
             rPM(PROCESS.handle,ADDRESS1,ADDRESS2,64,ctypes.byref(bytes_read))
